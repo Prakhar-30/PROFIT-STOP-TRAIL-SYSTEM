@@ -11,25 +11,18 @@ import './styles/App.css';
 function App() {
   const { account, chainId, isConnecting, connect, formattedAccount } = useWeb3();
   const { contracts, isDeployed, saveContracts } = useContracts(account);
-  const [view, setView] = useState('dashboard'); // 'form' or 'dashboard'
-
-  // Set initial view based on deployment status
-  useEffect(() => {
-    if (account) {
-      if (isDeployed) {
-        setView('dashboard');
-      } else {
-        setView('form');
-      }
-    }
-  }, [account, isDeployed]);
+  const [view, setView] = useState('landing'); // 'landing', 'dashboard', or 'form'
 
   const handleContractsDeployed = (callbackAddress, reactiveAddress) => {
     saveContracts(callbackAddress, reactiveAddress);
   };
 
-  const handleViewDashboard = () => {
+  const handleGoToDashboard = () => {
     setView('dashboard');
+  };
+
+  const handleBackToHome = () => {
+    setView('landing');
   };
 
   const handleAddPosition = () => {
@@ -48,7 +41,7 @@ function App() {
       />
 
       <main className="container">
-        {!account ? (
+        {view === 'landing' ? (
           <div className="welcome-screen">
             <div className="welcome-content glass-card fade-in">
               <div className="welcome-icon">⚡</div>
@@ -84,9 +77,22 @@ function App() {
                 </div>
               </div>
 
-              <button className="btn btn-primary btn-large" onClick={connect}>
-                Connect Wallet to Start
-              </button>
+              {!account ? (
+                <button className="btn btn-primary btn-large" onClick={connect}>
+                  Connect Wallet to Start
+                </button>
+              ) : (
+                <div className="landing-actions">
+                  <button className="btn btn-success btn-large" onClick={handleGoToDashboard}>
+                    Go to Dashboard →
+                  </button>
+                  {isDeployed && (
+                    <p className="deployment-status">
+                      ✓ Contracts deployed • {contracts.callback ? '1 Callback' : ''} • {contracts.reactive ? '1 Reactive' : ''}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : view === 'dashboard' ? (
@@ -95,6 +101,7 @@ function App() {
               account={account}
               contracts={contracts}
               onAddPosition={handleAddPosition}
+              onBackToHome={handleBackToHome}
             />
           ) : (
             <PositionForm
@@ -103,7 +110,8 @@ function App() {
               contracts={contracts}
               isDeployed={isDeployed}
               onContractsDeployed={handleContractsDeployed}
-              onPositionCreated={handleViewDashboard}
+              onPositionCreated={handleGoToDashboard}
+              onBackToHome={handleBackToHome}
             />
           )
         ) : (
@@ -113,7 +121,8 @@ function App() {
             contracts={contracts}
             isDeployed={isDeployed}
             onContractsDeployed={handleContractsDeployed}
-            onPositionCreated={handleViewDashboard}
+            onPositionCreated={handleGoToDashboard}
+            onBackToHome={handleBackToHome}
           />
         )}
       </main>

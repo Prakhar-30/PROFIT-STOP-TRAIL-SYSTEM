@@ -7,7 +7,7 @@ import { NETWORKS } from '../config/networks';
 import PriceChart from './PriceChart';
 import '../styles/PositionForm.css';
 
-const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDeployed, onPositionCreated }) => {
+const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDeployed, onPositionCreated, onBackToHome }) => {
   const [formData, setFormData] = useState({
     sellToken: '',
     buyToken: '',
@@ -256,6 +256,11 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
   if (step === 'deploy-callback' || step === 'deploy-reactive') {
     return (
       <div className="position-form glass-card fade-in">
+        {onBackToHome && (
+          <button className="btn-back-form" onClick={onBackToHome} title="Back to Home">
+            ← Back to Home
+          </button>
+        )}
         <div className="deployment-section">
           <div className="deployment-icon">🚀</div>
           <h2 className="form-title">Deploy Your Contracts</h2>
@@ -317,6 +322,11 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
 
   return (
     <div className="position-form glass-card fade-in">
+      {onBackToHome && (
+        <button className="btn-back-form" onClick={onBackToHome} title="Back to Home">
+          ← Back to Home
+        </button>
+      )}
       <h2 className="form-title">Create Profit-Locking Position</h2>
 
       <div className="form-content">
