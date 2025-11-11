@@ -37,9 +37,17 @@ export const switchNetwork = async (networkKey) => {
     // Chain not added, let's add it
     if (switchError.code === 4902) {
       try {
+        // Only pass EIP-3085 standard properties
+        const { chainId, chainName, nativeCurrency, rpcUrls, blockExplorerUrls } = network;
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
-          params: [network],
+          params: [{
+            chainId,
+            chainName,
+            nativeCurrency,
+            rpcUrls,
+            blockExplorerUrls
+          }],
         });
       } catch (addError) {
         console.error('Error adding network:', addError);
