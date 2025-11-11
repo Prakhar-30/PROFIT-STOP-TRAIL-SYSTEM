@@ -11,7 +11,18 @@ import './styles/App.css';
 function App() {
   const { account, chainId, isConnecting, connect, formattedAccount } = useWeb3();
   const { contracts, isDeployed, saveContracts } = useContracts(account);
-  const [view, setView] = useState('form'); // 'form' or 'dashboard'
+  const [view, setView] = useState('dashboard'); // 'form' or 'dashboard'
+
+  // Set initial view based on deployment status
+  useEffect(() => {
+    if (account) {
+      if (isDeployed) {
+        setView('dashboard');
+      } else {
+        setView('form');
+      }
+    }
+  }, [account, isDeployed]);
 
   const handleContractsDeployed = (callbackAddress, reactiveAddress) => {
     saveContracts(callbackAddress, reactiveAddress);
@@ -78,12 +89,23 @@ function App() {
               </button>
             </div>
           </div>
-        ) : view === 'dashboard' && isDeployed ? (
-          <Dashboard
-            account={account}
-            contracts={contracts}
-            onAddPosition={handleAddPosition}
-          />
+        ) : view === 'dashboard' ? (
+          isDeployed ? (
+            <Dashboard
+              account={account}
+              contracts={contracts}
+              onAddPosition={handleAddPosition}
+            />
+          ) : (
+            <PositionForm
+              account={account}
+              chainId={chainId}
+              contracts={contracts}
+              isDeployed={isDeployed}
+              onContractsDeployed={handleContractsDeployed}
+              onPositionCreated={handleViewDashboard}
+            />
+          )
         ) : (
           <PositionForm
             account={account}

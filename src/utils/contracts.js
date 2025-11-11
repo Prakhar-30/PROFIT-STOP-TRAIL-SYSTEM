@@ -1,10 +1,13 @@
 import { ethers } from 'ethers';
-import { getSigner, parseUnits } from './web3';
+import { getSigner, parseUnits, getProvider } from './web3';
 import { CALLBACK_ABI } from '../contracts/CallbackABI';
 import { REACTIVE_ABI } from '../contracts/ReactiveABI';
 import { ERC20_ABI, UNISWAP_PAIR_ABI, UNISWAP_FACTORY_ABI, UNISWAP_FACTORY_ADDRESS } from '../contracts/ERC20ABI';
 import { CALLBACK_BYTECODE, REACTIVE_BYTECODE } from '../contracts/bytecode';
 import { UNISWAP_V2_ROUTER, CALLBACK_SENDER, CALLBACK_DEPLOY_VALUE, REACTIVE_DEPLOY_VALUE } from '../config/networks';
+
+// Export getProvider for use in components
+export { getProvider };
 
 export const deployCallbackContract = async (ownerAddress) => {
   const signer = await getSigner();

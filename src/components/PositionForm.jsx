@@ -26,6 +26,31 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
   const [txStatus, setTxStatus] = useState('');
   const [tempCallbackAddress, setTempCallbackAddress] = useState('');
 
+  // Auto-check pair when both addresses are entered
+  useEffect(() => {
+    const { sellToken, buyToken } = formData;
+
+    // Only auto-check if:
+    // 1. Both addresses are valid
+    // 2. Not currently loading
+    // 3. In input state (not already checked)
+    // 4. Addresses are different
+    if (
+      validateTokenAddress(sellToken) &&
+      validateTokenAddress(buyToken) &&
+      sellToken.toLowerCase() !== buyToken.toLowerCase() &&
+      !loading &&
+      step === 'input'
+    ) {
+      // Small delay to avoid checking on every keystroke
+      const timer = setTimeout(() => {
+        checkPairAndTokens();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [formData.sellToken, formData.buyToken]);
+
   const checkPairAndTokens = async () => {
     try {
       setLoading(true);
@@ -376,6 +401,13 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
             </div>
           </div>
 
+          {step === 'checking' && (
+            <div className="checking-loader">
+              <div className="loader-spinner"></div>
+              <p className="loader-text">Verifying pair on Uniswap V2...</p>
+            </div>
+          )}
+
           {error && (
             <div className="error-message text-red">{error}</div>
           )}
@@ -385,16 +417,6 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
           )}
 
           <div className="form-actions">
-            {step === 'input' && (
-              <button
-                className="btn btn-primary"
-                onClick={checkPairAndTokens}
-                disabled={!isFormValid() || loading}
-              >
-                {loading ? 'Checking...' : 'Check Pair & Continue'}
-              </button>
-            )}
-
             {step === 'ready' && (
               <button
                 className="btn btn-success"

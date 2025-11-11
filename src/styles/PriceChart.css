@@ -11,6 +11,14 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.chart-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
 }
 
 .chart-title {
@@ -28,6 +36,40 @@
   letter-spacing: 1px;
 }
 
+.chart-time-range {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.time-btn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.time-btn:hover:not(:disabled) {
+  border-color: var(--primary-cyan);
+  color: var(--primary-cyan);
+}
+
+.time-btn.active {
+  border-color: var(--primary-cyan);
+  color: var(--primary-cyan);
+  background: rgba(0, 255, 255, 0.1);
+}
+
+.time-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .chart-canvas {
   width: 100%;
   min-height: 300px;
@@ -35,9 +77,27 @@
 
 .chart-loading {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 300px;
+  gap: var(--spacing-md);
+}
+
+.chart-loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 255, 255, 0.1);
+  border-top-color: var(--primary-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.chart-loader-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  margin: 0;
 }
 
 .chart-error {

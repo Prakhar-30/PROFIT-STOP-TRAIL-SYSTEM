@@ -26,7 +26,7 @@ main {
 .welcome-icon {
   font-size: 5rem;
   margin-bottom: var(--spacing-lg);
-  filter: drop-shadow(0 0 30px var(--primary-cyan));
+  filter: drop-shadow(0 0 8px var(--primary-cyan));
 }
 
 .welcome-title {
@@ -35,7 +35,6 @@ main {
   margin-bottom: var(--spacing-md);
   text-transform: uppercase;
   letter-spacing: 3px;
-  text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
 }
 
 .welcome-description {
@@ -65,7 +64,7 @@ main {
 
 .feature:hover {
   border-color: var(--primary-cyan);
-  box-shadow: var(--shadow-glow-cyan);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
   transform: translateY(-4px);
 }
 
