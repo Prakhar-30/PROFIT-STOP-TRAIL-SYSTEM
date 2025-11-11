@@ -1,0 +1,20 @@
+export const CALLBACK_ABI = [
+  "constructor(address _owner, address _callbackSender, address _router) payable",
+  "function createProfitLockingPosition(address pair, bool sellToken0, uint256 baseAmount, uint256 coefficient, uint256 hardStopPercent, uint256 profitTakePercent) external returns (uint256)",
+  "function getAllPositions() external view returns (uint256[] memory)",
+  "function getActivePositions() external view returns (uint256[] memory)",
+  "function positions(uint256) external view returns (tuple(uint256 id, address pair, address tokenSell, address tokenBuy, bool sellToken0, uint256 coefficient, uint256 baseAmount, uint256 remainingBase, uint256 totalProfitsSold, uint256 entryPrice, uint256 hardStopPrice, uint256 hardStopPercent, uint256 profitTakePercent, uint256 nextProfitMilestone, uint256 lastMilestonePrice, uint8 status, uint256 createdAt, uint256 closedAt, uint8 retryCount, uint256 lastExecutionAttempt))",
+  "function pausePosition(uint256 positionId) external",
+  "function resumePosition(uint256 positionId) external",
+  "function cancelPosition(uint256 positionId) external",
+  "function manualClosePosition(uint256 positionId) external",
+  "function getCurrentPrice(address pair, bool sellToken0) external view returns (uint256)",
+  "function owner() external view returns (address)",
+  "event ProfitLockingPositionCreated(address indexed pair, uint256 indexed positionId, bool sellToken0, address tokenSell, address tokenBuy, uint256 baseAmount, uint256 entryPrice, uint256 hardStopPercent, uint256 profitTakePercent)",
+  "event ProfitLocked(uint256 indexed positionId, uint256 profitAmount, uint256 profitValue, uint256 newMilestone, uint256 totalProfitsSold)",
+  "event HardStopTriggered(uint256 indexed positionId, uint256 baseAmountSold, uint256 profitsRemaining, uint256 totalReceived)",
+  "event PositionClosed(uint256 indexed positionId, uint256 totalAmountSold, uint256 totalReceived, string reason)",
+  "event PositionCancelled(uint256 indexed positionId)",
+  "event PositionPaused(uint256 indexed positionId)",
+  "event PositionResumed(uint256 indexed positionId)"
+];
