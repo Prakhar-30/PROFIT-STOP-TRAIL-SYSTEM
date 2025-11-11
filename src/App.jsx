@@ -38,6 +38,8 @@ function App() {
         isConnecting={isConnecting}
         chainId={chainId}
         contracts={contracts}
+        onGoToHome={handleBackToHome}
+        onGoToDashboard={handleGoToDashboard}
       />
 
       <main className="container">
@@ -47,7 +49,7 @@ function App() {
               <div className="welcome-icon">⚡</div>
               <h1 className="welcome-title">Profit-Locking Trailing Stop System</h1>
               <p className="welcome-description">
-                Revolutionary profit-locking system for Uniswap V2. Lock profits incrementally while
+                Automated profit-locking system for Uniswap V2. Lock profits incrementally while
                 keeping your base position alive to capture unlimited upside.
               </p>
 

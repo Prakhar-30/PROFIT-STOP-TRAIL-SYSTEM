@@ -66,6 +66,42 @@
   margin-top: var(--spacing-xs);
 }
 
+.pair-info-display {
+  padding: var(--spacing-md);
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid var(--accent-green);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.pair-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.pair-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pair-check {
+  font-size: 1.25rem;
+  color: var(--accent-green);
+}
+
+.pair-address {
+  font-size: 0.75rem;
+  word-break: break-all;
+  padding: var(--spacing-xs);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+}
+
 .form-actions {
   display: flex;
   gap: var(--spacing-md);

@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/Header.css';
 
-const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, contracts }) => {
+const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, contracts, onGoToHome, onGoToDashboard }) => {
   const getNetworkName = (chainId) => {
     switch (chainId) {
       case 11155111:
@@ -26,6 +26,16 @@ const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, c
           </div>
 
           <div className="header-right">
+            {account && (
+              <nav className="header-nav">
+                <button className="nav-link" onClick={onGoToHome}>
+                  Home
+                </button>
+                <button className="nav-link" onClick={onGoToDashboard}>
+                  Dashboard
+                </button>
+              </nav>
+            )}
             {account && chainId && (
               <div className="network-badge">
                 <span className="network-dot"></span>

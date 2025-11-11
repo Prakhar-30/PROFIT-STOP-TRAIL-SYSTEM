@@ -1,6 +1,6 @@
 # Profit-Locking Trailing Stop System
 
-Revolutionary profit-locking system for Uniswap V2, built using Reactive Smart Contracts. Unlike traditional trailing stops that force complete exits, this system locks profits incrementally while keeping your base position alive to capture unlimited upside.
+Automated profit-locking system for Uniswap V2, built using Reactive Smart Contracts. Unlike traditional trailing stops that force complete exits, this system locks profits incrementally while keeping your base position alive to capture unlimited upside.
 
 ## 🚀 Features
 

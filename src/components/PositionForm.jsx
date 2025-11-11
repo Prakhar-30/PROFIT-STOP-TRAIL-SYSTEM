@@ -365,6 +365,18 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
             )}
           </div>
 
+          {pairInfo && (
+            <div className="pair-info-display">
+              <div className="pair-info-header">
+                <span className="pair-label">Uniswap V2 Pair Found</span>
+                <span className="pair-check">✓</span>
+              </div>
+              <div className="pair-address mono text-cyan">
+                {pairInfo.address}
+              </div>
+            </div>
+          )}
+
           <div className="input-group">
             <label className="input-label">Amount to Protect</label>
             <input
