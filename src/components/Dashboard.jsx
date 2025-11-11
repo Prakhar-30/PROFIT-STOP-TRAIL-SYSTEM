@@ -3,7 +3,7 @@ import { getPositions, getPosition } from '../utils/contracts';
 import PositionCard from './PositionCard';
 import '../styles/Dashboard.css';
 
-const Dashboard = ({ account, contracts, onAddPosition, onBackToHome }) => {
+const Dashboard = ({ account, contracts, onAddPosition }) => {
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active'); // active, paused, past
@@ -72,11 +72,6 @@ const Dashboard = ({ account, contracts, onAddPosition, onBackToHome }) => {
     <div className="dashboard fade-in">
       <div className="dashboard-header">
         <div className="dashboard-title-section">
-          {onBackToHome && (
-            <button className="btn-back" onClick={onBackToHome} title="Back to Home">
-              ← Home
-            </button>
-          )}
           <h2 className="dashboard-title">Your Positions</h2>
           <button
             className="btn-refresh"

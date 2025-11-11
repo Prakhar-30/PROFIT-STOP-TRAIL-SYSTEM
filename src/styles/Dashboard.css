@@ -32,25 +32,6 @@
   letter-spacing: 2px;
 }
 
-.btn-back {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background: transparent;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-back:hover {
-  border-color: var(--primary-cyan);
-  color: var(--primary-cyan);
-  background: rgba(0, 255, 255, 0.05);
-}
-
 .btn-refresh {
   width: 40px;
   height: 40px;

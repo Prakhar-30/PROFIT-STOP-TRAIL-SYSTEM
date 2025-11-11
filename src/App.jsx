@@ -103,7 +103,6 @@ function App() {
               account={account}
               contracts={contracts}
               onAddPosition={handleAddPosition}
-              onBackToHome={handleBackToHome}
             />
           ) : (
             <PositionForm
