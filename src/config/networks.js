@@ -14,14 +14,14 @@ export const NETWORKS = {
   REACTIVE_LASNA: {
     chainId: '0x511f87', // 5318007
     chainIdDecimal: 5318007,
-    chainName: 'Reactive Lasna Testnet',
+    chainName: 'Reactive Lasna',
     nativeCurrency: {
       name: 'REACT',
       symbol: 'REACT',
       decimals: 18
     },
     rpcUrls: ['https://lasna-rpc.rnk.dev/'],
-    blockExplorerUrls: ['https://lasna.reactive.network']
+    blockExplorerUrls: ['https://lasna.reactscan.net']
   }
 };
 
