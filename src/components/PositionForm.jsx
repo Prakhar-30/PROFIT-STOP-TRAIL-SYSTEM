@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { getUniswapPair, getTokenInfo, getTokenBalance, approveToken, getAllowance, createPosition } from '../utils/contracts';
-import { parseUnits, formatUnits } from '../utils/web3';
+import { getUniswapPair, getTokenInfo, getTokenBalance, approveToken, getAllowance, createPosition, deployCallbackContract, deployReactiveContract } from '../utils/contracts';
+import { parseUnits, formatUnits, switchNetwork } from '../utils/web3';
 import { validateTokenAddress, validateAmount, validatePercentage } from '../utils/helpers';
+import { NETWORKS } from '../config/networks';
 import PriceChart from './PriceChart';
 import '../styles/PositionForm.css';
 
-const PositionForm = ({ account, contracts, onPositionCreated }) => {
+const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDeployed, onPositionCreated }) => {
   const [formData, setFormData] = useState({
     sellToken: '',
     buyToken: '',
@@ -20,9 +21,10 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
   const [buyTokenInfo, setBuyTokenInfo] = useState(null);
   const [balance, setBalance] = useState('0');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState('input'); // input, checking, ready, deploying
+  const [step, setStep] = useState('input'); // input, checking, ready, deploy-callback, deploy-reactive, creating
   const [error, setError] = useState('');
   const [txStatus, setTxStatus] = useState('');
+  const [tempCallbackAddress, setTempCallbackAddress] = useState('');
 
   const checkPairAndTokens = async () => {
     try {
@@ -67,23 +69,111 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
     }
   };
 
+  const handleProceed = async () => {
+    const { amount, hardStopPercent, profitTakePercent } = formData;
+
+    if (!validateAmount(amount)) {
+      setError('Please enter a valid amount');
+      return;
+    }
+
+    if (!validatePercentage(hardStopPercent) || !validatePercentage(profitTakePercent)) {
+      setError('Please enter valid percentages (1-99)');
+      return;
+    }
+
+    // Check if contracts are deployed
+    if (!isDeployed) {
+      // Need to deploy contracts first
+      setStep('deploy-callback');
+    } else {
+      // Contracts already deployed, proceed to create position
+      handleCreatePosition();
+    }
+  };
+
+  const deployCallback = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // Ensure on Sepolia
+      if (chainId !== NETWORKS.SEPOLIA.chainIdDecimal) {
+        setTxStatus('Switching to Sepolia...');
+        await switchNetwork('SEPOLIA');
+        setTxStatus('Network switched! Please click Deploy again.');
+        setLoading(false);
+        return;
+      }
+
+      setTxStatus('Deploying Callback Contract on Sepolia...');
+      const address = await deployCallbackContract(account);
+
+      setTempCallbackAddress(address);
+      setTxStatus(`Callback deployed at ${address.slice(0, 10)}...${address.slice(-8)}`);
+      setStep('deploy-reactive');
+      setLoading(false);
+    } catch (err) {
+      console.error('Callback deployment error:', err);
+      setError(err.message || 'Failed to deploy callback contract');
+      setStep('deploy-callback');
+      setLoading(false);
+    }
+  };
+
+  const deployReactive = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // Ensure on Reactive Lasna
+      if (chainId !== NETWORKS.REACTIVE_LASNA.chainIdDecimal) {
+        setTxStatus('Switching to Reactive Lasna...');
+        await switchNetwork('REACTIVE_LASNA');
+        setTxStatus('Network switched! Please click Deploy again.');
+        setLoading(false);
+        return;
+      }
+
+      setTxStatus('Deploying Reactive Contract on Lasna...');
+      const address = await deployReactiveContract(account, tempCallbackAddress);
+
+      setTxStatus('All contracts deployed successfully!');
+
+      // Save contracts
+      onContractsDeployed(tempCallbackAddress, address);
+
+      // Switch back to Sepolia for position creation
+      setTimeout(async () => {
+        setTxStatus('Switching back to Sepolia...');
+        await switchNetwork('SEPOLIA');
+        setStep('creating');
+        setLoading(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Reactive deployment error:', err);
+      setError(err.message || 'Failed to deploy reactive contract');
+      setStep('deploy-reactive');
+      setLoading(false);
+    }
+  };
+
   const handleCreatePosition = async () => {
     try {
       setLoading(true);
       setError('');
       setTxStatus('');
+      setStep('creating');
 
       const { amount, hardStopPercent, profitTakePercent } = formData;
-
-      if (!validateAmount(amount)) {
-        throw new Error('Invalid amount');
-      }
-
-      if (!validatePercentage(hardStopPercent) || !validatePercentage(profitTakePercent)) {
-        throw new Error('Invalid percentages');
-      }
-
       const amountInWei = parseUnits(amount, sellTokenInfo.decimals);
+
+      // Ensure on Sepolia
+      if (chainId !== NETWORKS.SEPOLIA.chainIdDecimal) {
+        setTxStatus('Switching to Sepolia...');
+        await switchNetwork('SEPOLIA');
+        setTxStatus('Network switched! Creating position...');
+      }
 
       // Check allowance
       setTxStatus('Checking token allowance...');
@@ -114,7 +204,6 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
     } catch (err) {
       console.error('Error creating position:', err);
       setError(err.message || 'Failed to create position');
-    } finally {
       setLoading(false);
     }
   };
@@ -123,20 +212,83 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    if (step !== 'input') {
+    if (step !== 'input' && step !== 'ready') {
       setStep('input');
       setPairInfo(null);
     }
   };
 
   const isFormValid = () => {
-    const { sellToken, buyToken, amount, hardStopPercent, profitTakePercent } = formData;
+    const { sellToken, buyToken } = formData;
     return (
       validateTokenAddress(sellToken) &&
       validateTokenAddress(buyToken) &&
       sellToken.toLowerCase() !== buyToken.toLowerCase()
     );
   };
+
+  // Render deployment UI
+  if (step === 'deploy-callback' || step === 'deploy-reactive') {
+    return (
+      <div className="position-form glass-card fade-in">
+        <div className="deployment-section">
+          <div className="deployment-icon">🚀</div>
+          <h2 className="form-title">Deploy Your Contracts</h2>
+          <p className="deployment-subtitle">
+            First-time setup requires deploying two contracts
+          </p>
+
+          <div className="deployment-steps">
+            <div className={`step ${step === 'deploy-reactive' ? 'completed' : 'active'}`}>
+              <div className="step-number">1</div>
+              <div className="step-content">
+                <h3>Callback Contract</h3>
+                <p>Deploy on Sepolia (0.01 ETH)</p>
+                {tempCallbackAddress && (
+                  <p className="step-address mono text-cyan">
+                    {tempCallbackAddress.slice(0, 10)}...{tempCallbackAddress.slice(-8)}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className={`step ${step === 'deploy-reactive' ? 'active' : ''}`}>
+              <div className="step-number">2</div>
+              <div className="step-content">
+                <h3>Reactive Contract</h3>
+                <p>Deploy on Reactive Lasna (1 REACT)</p>
+              </div>
+            </div>
+          </div>
+
+          {error && <div className="error-message text-red">{error}</div>}
+          {txStatus && <div className="status-message text-cyan">{txStatus}</div>}
+
+          <div className="form-actions">
+            {step === 'deploy-callback' && (
+              <button
+                className="btn btn-primary btn-large"
+                onClick={deployCallback}
+                disabled={loading}
+              >
+                {loading ? 'Deploying...' : 'Deploy Callback Contract'}
+              </button>
+            )}
+
+            {step === 'deploy-reactive' && (
+              <button
+                className="btn btn-success btn-large"
+                onClick={deployReactive}
+                disabled={loading}
+              >
+                {loading ? 'Deploying...' : 'Deploy Reactive Contract'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="position-form glass-card fade-in">
@@ -153,7 +305,7 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
               placeholder="0x..."
               value={formData.sellToken}
               onChange={handleInputChange}
-              disabled={loading}
+              disabled={loading || step === 'creating'}
             />
             {sellTokenInfo && (
               <span className="token-info text-cyan">
@@ -171,7 +323,7 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
               placeholder="0x..."
               value={formData.buyToken}
               onChange={handleInputChange}
-              disabled={loading}
+              disabled={loading || step === 'creating'}
             />
             {buyTokenInfo && (
               <span className="token-info text-cyan">{buyTokenInfo.symbol}</span>
@@ -187,7 +339,7 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
               placeholder="0.0"
               value={formData.amount}
               onChange={handleInputChange}
-              disabled={loading || !pairInfo}
+              disabled={loading || !pairInfo || step === 'creating'}
               step="0.0001"
             />
           </div>
@@ -202,7 +354,7 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
                 placeholder="10"
                 value={formData.hardStopPercent}
                 onChange={handleInputChange}
-                disabled={loading || !pairInfo}
+                disabled={loading || !pairInfo || step === 'creating'}
                 min="1"
                 max="99"
               />
@@ -217,7 +369,7 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
                 placeholder="20"
                 value={formData.profitTakePercent}
                 onChange={handleInputChange}
-                disabled={loading || !pairInfo}
+                disabled={loading || !pairInfo || step === 'creating'}
                 min="1"
                 max="99"
               />
@@ -246,10 +398,16 @@ const PositionForm = ({ account, contracts, onPositionCreated }) => {
             {step === 'ready' && (
               <button
                 className="btn btn-success"
-                onClick={handleCreatePosition}
+                onClick={handleProceed}
                 disabled={loading || !formData.amount}
               >
-                {loading ? 'Processing...' : 'Create Position'}
+                {!isDeployed ? 'Deploy Contracts & Create Position' : 'Create Position'}
+              </button>
+            )}
+
+            {step === 'creating' && (
+              <button className="btn btn-success" disabled>
+                Processing...
               </button>
             )}
           </div>

@@ -11,19 +11,18 @@ import './styles/App.css';
 function App() {
   const { account, chainId, isConnecting, connect, formattedAccount } = useWeb3();
   const { contracts, isDeployed, saveContracts } = useContracts(account);
-  const [showPositionForm, setShowPositionForm] = useState(false);
+  const [view, setView] = useState('form'); // 'form' or 'dashboard'
 
   const handleContractsDeployed = (callbackAddress, reactiveAddress) => {
     saveContracts(callbackAddress, reactiveAddress);
-    setShowPositionForm(false);
+  };
+
+  const handleViewDashboard = () => {
+    setView('dashboard');
   };
 
   const handleAddPosition = () => {
-    setShowPositionForm(true);
-  };
-
-  const handlePositionCreated = () => {
-    setShowPositionForm(false);
+    setView('form');
   };
 
   return (
@@ -79,23 +78,20 @@ function App() {
               </button>
             </div>
           </div>
-        ) : !isDeployed ? (
-          <ContractDeployment
-            account={account}
-            chainId={chainId}
-            onDeployed={handleContractsDeployed}
-          />
-        ) : showPositionForm ? (
-          <PositionForm
-            account={account}
-            contracts={contracts}
-            onPositionCreated={handlePositionCreated}
-          />
-        ) : (
+        ) : view === 'dashboard' && isDeployed ? (
           <Dashboard
             account={account}
             contracts={contracts}
             onAddPosition={handleAddPosition}
+          />
+        ) : (
+          <PositionForm
+            account={account}
+            chainId={chainId}
+            contracts={contracts}
+            isDeployed={isDeployed}
+            onContractsDeployed={handleContractsDeployed}
+            onPositionCreated={handleViewDashboard}
           />
         )}
       </main>
