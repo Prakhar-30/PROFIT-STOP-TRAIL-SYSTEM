@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getPositions, getPosition } from '../utils/contracts';
+import { useToast } from '../contexts/ToastContext';
 import PositionCard from './PositionCard';
 import '../styles/Dashboard.css';
 
 const Dashboard = ({ account, contracts, onAddPosition }) => {
+  const { showError } = useToast();
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active'); // active, paused, past
@@ -26,7 +28,8 @@ const Dashboard = ({ account, contracts, onAddPosition }) => {
 
       setPositions(positionsData);
     } catch (error) {
-      console.error('Error fetching positions:', error);
+      const message = error.message || 'Failed to fetch positions';
+      showError(message);
     } finally {
       setLoading(false);
       setRefreshing(false);

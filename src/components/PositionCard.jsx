@@ -3,10 +3,12 @@ import { ethers } from 'ethers';
 import { pausePosition, resumePosition, cancelPosition, getCurrentPrice } from '../utils/contracts';
 import { formatUnits } from '../utils/web3';
 import { getStatusColor, getStatusText, basisPointsToPercent, formatTimeAgo } from '../utils/helpers';
+import { useToast } from '../contexts/ToastContext';
 import PriceChart from './PriceChart';
 import '../styles/PositionCard.css';
 
 const PositionCard = ({ position, callbackAddress, onUpdate }) => {
+  const { showError, showSuccess, showInfo } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState(null);
@@ -14,10 +16,13 @@ const PositionCard = ({ position, callbackAddress, onUpdate }) => {
   const handlePause = async () => {
     try {
       setLoading(true);
+      showInfo('Please confirm the transaction in your wallet');
       await pausePosition(callbackAddress, position.id);
+      showSuccess(`Position #${position.id} paused successfully!`);
       onUpdate();
     } catch (error) {
-      console.error('Error pausing position:', error);
+      const message = error.message || 'Failed to pause position';
+      showError(message);
     } finally {
       setLoading(false);
     }
@@ -26,26 +31,32 @@ const PositionCard = ({ position, callbackAddress, onUpdate }) => {
   const handleResume = async () => {
     try {
       setLoading(true);
+      showInfo('Please confirm the transaction in your wallet');
       await resumePosition(callbackAddress, position.id);
+      showSuccess(`Position #${position.id} resumed successfully!`);
       onUpdate();
     } catch (error) {
-      console.error('Error resuming position:', error);
+      const message = error.message || 'Failed to resume position';
+      showError(message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = async () => {
-    if (!window.confirm('Are you sure you want to cancel this position?')) {
+    if (!window.confirm('Are you sure you want to cancel this position? This action cannot be undone.')) {
       return;
     }
 
     try {
       setLoading(true);
+      showInfo('Please confirm the transaction in your wallet');
       await cancelPosition(callbackAddress, position.id);
+      showSuccess(`Position #${position.id} cancelled successfully!`);
       onUpdate();
     } catch (error) {
-      console.error('Error cancelling position:', error);
+      const message = error.message || 'Failed to cancel position';
+      showError(message);
     } finally {
       setLoading(false);
     }
@@ -56,6 +67,7 @@ const PositionCard = ({ position, callbackAddress, onUpdate }) => {
       const price = await getCurrentPrice(callbackAddress, position.pair, position.sellToken0);
       setCurrentPrice(price);
     } catch (error) {
+      // Silently fail for price loading - not critical
       console.error('Error loading price:', error);
     }
   };

@@ -4,10 +4,12 @@ import { getUniswapPair, getTokenInfo, getTokenBalance, approveToken, getAllowan
 import { parseUnits, formatUnits, switchNetwork } from '../utils/web3';
 import { validateTokenAddress, validateAmount, validatePercentage } from '../utils/helpers';
 import { NETWORKS } from '../config/networks';
+import { useToast } from '../contexts/ToastContext';
 import PriceChart from './PriceChart';
 import '../styles/PositionForm.css';
 
 const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDeployed, onPositionCreated }) => {
+  const { showError, showSuccess, showInfo } = useToast();
   const [formData, setFormData] = useState({
     sellToken: '',
     buyToken: '',
@@ -22,7 +24,6 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
   const [balance, setBalance] = useState('0');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('input'); // input, checking, ready, deploy-callback, deploy-reactive, creating
-  const [error, setError] = useState('');
   const [txStatus, setTxStatus] = useState('');
   const [tempCallbackAddress, setTempCallbackAddress] = useState('');
 
@@ -54,7 +55,6 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
   const checkPairAndTokens = async () => {
     try {
       setLoading(true);
-      setError('');
       setStep('checking');
 
       const { sellToken, buyToken } = formData;
@@ -85,9 +85,10 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
       });
 
       setStep('ready');
+      showSuccess(`Pair verified! ${sellInfo.symbol}/${buyInfo.symbol}`);
     } catch (err) {
-      console.error('Error checking pair:', err);
-      setError(err.message || 'Failed to verify pair. Make sure the pair exists on Uniswap.');
+      const message = err.message || 'Failed to verify pair. Make sure the pair exists on Uniswap.';
+      showError(message);
       setStep('input');
     } finally {
       setLoading(false);
@@ -98,12 +99,12 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
     const { amount, hardStopPercent, profitTakePercent } = formData;
 
     if (!validateAmount(amount)) {
-      setError('Please enter a valid amount');
+      showError('Please enter a valid amount');
       return;
     }
 
     if (!validatePercentage(hardStopPercent) || !validatePercentage(profitTakePercent)) {
-      setError('Please enter valid percentages (1-99)');
+      showError('Please enter valid percentages (1-99)');
       return;
     }
 
@@ -120,27 +121,29 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
   const deployCallback = async () => {
     try {
       setLoading(true);
-      setError('');
 
       // Ensure on Sepolia
       if (chainId !== NETWORKS.SEPOLIA.chainIdDecimal) {
         setTxStatus('Switching to Sepolia...');
         await switchNetwork('SEPOLIA');
         setTxStatus('Network switched! Please click Deploy again.');
+        showInfo('Network switched to Sepolia. Please click Deploy again.');
         setLoading(false);
         return;
       }
 
       setTxStatus('Deploying Callback Contract on Sepolia...');
+      showInfo('Please confirm the deployment transaction in your wallet');
       const address = await deployCallbackContract(account);
 
       setTempCallbackAddress(address);
       setTxStatus(`Callback deployed at ${address.slice(0, 10)}...${address.slice(-8)}`);
       setStep('deploy-reactive');
+      showSuccess(`Callback contract deployed at ${address.slice(0, 10)}...${address.slice(-8)}`);
       setLoading(false);
     } catch (err) {
-      console.error('Callback deployment error:', err);
-      setError(err.message || 'Failed to deploy callback contract');
+      const message = err.message || 'Failed to deploy callback contract';
+      showError(message);
       setStep('deploy-callback');
       setLoading(false);
     }
@@ -149,21 +152,23 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
   const deployReactive = async () => {
     try {
       setLoading(true);
-      setError('');
 
       // Ensure on Reactive Lasna
       if (chainId !== NETWORKS.REACTIVE_LASNA.chainIdDecimal) {
         setTxStatus('Switching to Reactive Lasna...');
         await switchNetwork('REACTIVE_LASNA');
         setTxStatus('Network switched! Please click Deploy again.');
+        showInfo('Network switched to Reactive Lasna. Please click Deploy again.');
         setLoading(false);
         return;
       }
 
       setTxStatus('Deploying Reactive Contract on Lasna...');
+      showInfo('Please confirm the deployment transaction in your wallet');
       const address = await deployReactiveContract(account, tempCallbackAddress);
 
       setTxStatus('All contracts deployed successfully!');
+      showSuccess('All contracts deployed successfully!');
 
       // Save contracts
       onContractsDeployed(tempCallbackAddress, address);
@@ -176,8 +181,8 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
         setLoading(false);
       }, 2000);
     } catch (err) {
-      console.error('Reactive deployment error:', err);
-      setError(err.message || 'Failed to deploy reactive contract');
+      const message = err.message || 'Failed to deploy reactive contract';
+      showError(message);
       setStep('deploy-reactive');
       setLoading(false);
     }
@@ -186,7 +191,6 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
   const handleCreatePosition = async () => {
     try {
       setLoading(true);
-      setError('');
       setTxStatus('');
       setStep('creating');
 
@@ -196,6 +200,7 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
       // Ensure on Sepolia
       if (chainId !== NETWORKS.SEPOLIA.chainIdDecimal) {
         setTxStatus('Switching to Sepolia...');
+        showInfo('Switching to Sepolia network...');
         await switchNetwork('SEPOLIA');
         setTxStatus('Network switched! Creating position...');
       }
@@ -207,12 +212,15 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
       // Approve if needed
       if (allowance < amountInWei) {
         setTxStatus('Approving tokens...');
+        showInfo('Please approve token spending in your wallet');
         await approveToken(formData.sellToken, contracts.callback, amountInWei);
         setTxStatus('Tokens approved!');
+        showSuccess('Tokens approved successfully!');
       }
 
       // Create position
       setTxStatus('Creating position...');
+      showInfo('Please confirm the position creation in your wallet');
       await createPosition(
         contracts.callback,
         pairInfo.address,
@@ -223,12 +231,13 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
       );
 
       setTxStatus('Position created successfully!');
+      showSuccess('Position created successfully! Redirecting to dashboard...');
       setTimeout(() => {
         onPositionCreated();
       }, 2000);
     } catch (err) {
-      console.error('Error creating position:', err);
-      setError(err.message || 'Failed to create position');
+      const message = err.message || 'Failed to create position';
+      showError(message);
       setLoading(false);
     }
   };
