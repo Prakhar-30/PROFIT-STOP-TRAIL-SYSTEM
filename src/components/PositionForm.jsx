@@ -295,7 +295,6 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
             </div>
           </div>
 
-          {error && <div className="error-message text-red">{error}</div>}
           {txStatus && <div className="status-message text-cyan">{txStatus}</div>}
 
           <div className="form-actions">
@@ -427,10 +426,6 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
               <div className="loader-spinner"></div>
               <p className="loader-text">Verifying pair on Uniswap V2...</p>
             </div>
-          )}
-
-          {error && (
-            <div className="error-message text-red">{error}</div>
           )}
 
           {txStatus && (
