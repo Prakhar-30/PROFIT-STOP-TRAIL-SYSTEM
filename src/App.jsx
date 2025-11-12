@@ -112,7 +112,6 @@ function App() {
               isDeployed={isDeployed}
               onContractsDeployed={handleContractsDeployed}
               onPositionCreated={handleGoToDashboard}
-              onBackToHome={handleBackToHome}
             />
           )
         ) : (
@@ -123,7 +122,6 @@ function App() {
             isDeployed={isDeployed}
             onContractsDeployed={handleContractsDeployed}
             onPositionCreated={handleGoToDashboard}
-            onBackToHome={handleBackToHome}
           />
         )}
       </main>

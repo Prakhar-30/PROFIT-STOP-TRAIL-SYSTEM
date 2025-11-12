@@ -1,29 +1,5 @@
 .position-form {
   margin: var(--spacing-xl) 0;
-  position: relative;
-}
-
-.btn-back-form {
-  position: absolute;
-  top: var(--spacing-lg);
-  left: var(--spacing-lg);
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background: transparent;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 10;
-}
-
-.btn-back-form:hover {
-  border-color: var(--primary-cyan);
-  color: var(--primary-cyan);
-  background: rgba(0, 255, 255, 0.05);
 }
 
 .form-title {
