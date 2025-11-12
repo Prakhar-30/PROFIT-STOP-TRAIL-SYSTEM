@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Header.css';
 
-const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, contracts, onGoToHome, onGoToDashboard }) => {
+const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, contracts }) => {
+  const navigate = useNavigate();
+
   const getNetworkName = (chainId) => {
     switch (chainId) {
       case 11155111:
@@ -28,10 +31,10 @@ const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, c
           <div className="header-right">
             {account && (
               <nav className="header-nav">
-                <button className="nav-link" onClick={onGoToHome}>
+                <button className="nav-link" onClick={() => navigate('/')}>
                   Home
                 </button>
-                <button className="nav-link" onClick={onGoToDashboard}>
+                <button className="nav-link" onClick={() => navigate('/dashboard')}>
                   Dashboard
                 </button>
               </nav>

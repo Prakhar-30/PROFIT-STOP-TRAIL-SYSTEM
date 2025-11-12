@@ -1,130 +1,80 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useWeb3 } from './hooks/useWeb3';
 import { useContracts } from './hooks/useContracts';
 import Header from './components/Header';
-import ContractDeployment from './components/ContractDeployment';
-import Dashboard from './components/Dashboard';
-import PositionForm from './components/PositionForm';
+import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
+import CreatePositionPage from './pages/CreatePositionPage';
 import './styles/index.css';
 import './styles/App.css';
 
 function App() {
   const { account, chainId, isConnecting, connect, formattedAccount } = useWeb3();
   const { contracts, isDeployed, saveContracts } = useContracts(account);
-  const [view, setView] = useState('landing'); // 'landing', 'dashboard', or 'form'
 
   const handleContractsDeployed = (callbackAddress, reactiveAddress) => {
     saveContracts(callbackAddress, reactiveAddress);
   };
 
-  const handleGoToDashboard = () => {
-    setView('dashboard');
-  };
-
-  const handleBackToHome = () => {
-    setView('landing');
-  };
-
-  const handleAddPosition = () => {
-    setView('form');
-  };
-
   return (
-    <div className="app">
-      <Header
-        account={account}
-        formattedAccount={formattedAccount}
-        onConnect={connect}
-        isConnecting={isConnecting}
-        chainId={chainId}
-        contracts={contracts}
-        onGoToHome={handleBackToHome}
-        onGoToDashboard={handleGoToDashboard}
-      />
+    <BrowserRouter>
+      <div className="app">
+        <Header
+          account={account}
+          formattedAccount={formattedAccount}
+          onConnect={connect}
+          isConnecting={isConnecting}
+          chainId={chainId}
+          contracts={contracts}
+        />
 
-      <main className="container">
-        {view === 'landing' ? (
-          <div className="welcome-screen">
-            <div className="welcome-content glass-card fade-in">
-              <div className="welcome-icon">⚡</div>
-              <h1 className="welcome-title">Profit-Locking Trailing Stop System</h1>
-              <p className="welcome-description">
-                Automated profit-locking system for Uniswap V2. Lock profits incrementally while
-                keeping your base position alive to capture unlimited upside.
-              </p>
-
-              <div className="features">
-                <div className="feature">
-                  <div className="feature-icon">🎯</div>
-                  <h3>Incremental Profit Locking</h3>
-                  <p>Lock profits at milestones without exiting your position</p>
-                </div>
-
-                <div className="feature">
-                  <div className="feature-icon">🛡️</div>
-                  <h3>Hard Stop Protection</h3>
-                  <p>Absolute floor protection for catastrophic events</p>
-                </div>
-
-                <div className="feature">
-                  <div className="feature-icon">🚀</div>
-                  <h3>Unlimited Upside</h3>
-                  <p>Base position stays alive to ride unlimited trends</p>
-                </div>
-
-                <div className="feature">
-                  <div className="feature-icon">🤖</div>
-                  <h3>Automated 24/7</h3>
-                  <p>Reactive Network monitors and executes automatically</p>
-                </div>
-              </div>
-
-              {!account ? (
-                <button className="btn btn-primary btn-large" onClick={connect}>
-                  Connect Wallet to Start
-                </button>
-              ) : (
-                <div className="landing-actions">
-                  <button className="btn btn-success btn-large" onClick={handleGoToDashboard}>
-                    Go to Dashboard →
-                  </button>
-                  {isDeployed && (
-                    <p className="deployment-status">
-                      ✓ Contracts deployed • {contracts.callback ? '1 Callback' : ''} • {contracts.reactive ? '1 Reactive' : ''}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        ) : view === 'dashboard' ? (
-          isDeployed ? (
-            <Dashboard
-              account={account}
-              contracts={contracts}
-              onAddPosition={handleAddPosition}
+        <main className="container">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <HomePage
+                  account={account}
+                  connect={connect}
+                  isConnecting={isConnecting}
+                  isDeployed={isDeployed}
+                  contracts={contracts}
+                />
+              }
             />
-          ) : (
-            <PositionForm
-              account={account}
-              chainId={chainId}
-              contracts={contracts}
-              isDeployed={isDeployed}
-              onContractsDeployed={handleContractsDeployed}
-              onPositionCreated={handleGoToDashboard}
+            <Route
+              path="/dashboard"
+              element={
+                account ? (
+                  isDeployed ? (
+                    <DashboardPage account={account} contracts={contracts} />
+                  ) : (
+                    <Navigate to="/create" replace />
+                  )
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
             />
-          )
-        ) : (
-          <PositionForm
-            account={account}
-            chainId={chainId}
-            contracts={contracts}
-            isDeployed={isDeployed}
-            onContractsDeployed={handleContractsDeployed}
-            onPositionCreated={handleGoToDashboard}
-          />
-        )}
-      </main>
+            <Route
+              path="/create"
+              element={
+                account ? (
+                  <CreatePositionPage
+                    account={account}
+                    chainId={chainId}
+                    contracts={contracts}
+                    isDeployed={isDeployed}
+                    onContractsDeployed={handleContractsDeployed}
+                  />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+          </Routes>
+        </main>
 
       <footer className="footer">
         <div className="container">
