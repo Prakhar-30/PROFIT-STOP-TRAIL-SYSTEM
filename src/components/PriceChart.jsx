@@ -50,15 +50,14 @@ const PriceChart = ({ pairAddress, sellToken, buyToken }) => {
 
       // Time range configuration for Sepolia (12 second blocks)
       const timeRangeConfig = {
-        '15m': { blocks: 75, step: 3, dataPoints: 25 },
-        '30m': { blocks: 150, step: 6, dataPoints: 25 },
-        '1h': { blocks: 300, step: 12, dataPoints: 25 },
-        '6h': { blocks: 1800, step: 72, dataPoints: 25 },
-        '24h': { blocks: 7200, step: 288, dataPoints: 25 },
+        '15m': { blocks: 75, step: 2, dataPoints: 37, candleSize: 5 },
+        '30m': { blocks: 150, step: 2, dataPoints: 75, candleSize: 10 },
+        '1h': { blocks: 300, step: 3, dataPoints: 100, candleSize: 15 },
+        '6h': { blocks: 1800, step: 15, dataPoints: 120, candleSize: 20 },
       };
 
       const config = timeRangeConfig[timeRange] || timeRangeConfig['1h'];
-      const { blocks: totalBlocks, step: blockStep, dataPoints } = config;
+      const { blocks: totalBlocks, step: blockStep, dataPoints, candleSize } = config;
 
       const priceData = [];
 
@@ -75,11 +74,11 @@ const PriceChart = ({ pairAddress, sellToken, buyToken }) => {
           if (reserve0 > 0 && reserve1 > 0) {
             const price = reserve1 / reserve0;
             const block = await provider.getBlock(blockNumber);
-            const timestamp = block.timestamp;
+            const timestamp = Number(block.timestamp);
 
             priceData.push({
-              time: Number(timestamp),
-              value: price
+              time: timestamp,
+              price: price
             });
           }
         } catch (err) {
@@ -91,13 +90,35 @@ const PriceChart = ({ pairAddress, sellToken, buyToken }) => {
         setProgress(progressPercent);
 
         // Small delay to avoid rate limiting
-        if (i % 3 === 0 && i > 0) {
+        if (i % 5 === 0 && i > 0) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
 
       if (priceData.length === 0) {
         throw new Error('No price data available. The pair might be too new.');
+      }
+
+      // Convert to candlestick data
+      const candlestickData = [];
+      for (let i = 0; i < priceData.length; i += candleSize) {
+        const chunk = priceData.slice(i, Math.min(i + candleSize, priceData.length));
+        if (chunk.length === 0) continue;
+
+        const prices = chunk.map(d => d.price);
+        const open = prices[0];
+        const close = prices[prices.length - 1];
+        const high = Math.max(...prices);
+        const low = Math.min(...prices);
+        const time = chunk[0].time;
+
+        candlestickData.push({
+          time,
+          open,
+          high,
+          low,
+          close
+        });
       }
 
       // Create chart
@@ -129,12 +150,16 @@ const PriceChart = ({ pairAddress, sellToken, buyToken }) => {
         },
       });
 
-      const lineSeries = chart.addLineSeries({
-        color: '#00ff88',
-        lineWidth: 2,
+      const candlestickSeries = chart.addCandlestickSeries({
+        upColor: '#00ff88',
+        downColor: '#ff4444',
+        borderUpColor: '#00ff88',
+        borderDownColor: '#ff4444',
+        wickUpColor: '#00ff88',
+        wickDownColor: '#ff4444',
       });
 
-      lineSeries.setData(priceData);
+      candlestickSeries.setData(candlestickData);
       chart.timeScale().fitContent();
 
       chartRef.current = chart;
@@ -174,7 +199,7 @@ const PriceChart = ({ pairAddress, sellToken, buyToken }) => {
         </div>
 
         <div className="chart-time-range">
-          {['15m', '30m', '1h', '6h', '24h'].map((range) => (
+          {['15m', '30m', '1h', '6h'].map((range) => (
             <button
               key={range}
               className={`time-btn ${timeRange === range ? 'active' : ''}`}
