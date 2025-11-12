@@ -4,7 +4,7 @@ import { createChart } from 'lightweight-charts';
 import { getPairContract, getERC20Contract, getProvider } from '../utils/contracts';
 import '../styles/PriceChart.css';
 
-const PriceChart = ({ pairAddress, sellToken, buyToken }) => {
+const PriceChart = ({ pairAddress, sellToken, buyToken, sellToken0 }) => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +23,7 @@ const PriceChart = ({ pairAddress, sellToken, buyToken }) => {
         chartRef.current = null;
       }
     };
-  }, [pairAddress, timeRange]);
+  }, [pairAddress, timeRange, sellToken0]);
 
   const fetchHistoricalPrices = async () => {
     try {
@@ -72,7 +72,10 @@ const PriceChart = ({ pairAddress, sellToken, buyToken }) => {
           const reserve1 = parseFloat(ethers.formatUnits(reserves.reserve1, decimals1));
 
           if (reserve0 > 0 && reserve1 > 0) {
-            const price = reserve1 / reserve0;
+            // Calculate price based on which token is being sold
+            // If selling token0, price = reserve1/reserve0 (how much token1 per token0)
+            // If selling token1, price = reserve0/reserve1 (how much token0 per token1)
+            const price = sellToken0 ? (reserve1 / reserve0) : (reserve0 / reserve1);
             const block = await provider.getBlock(blockNumber);
             const timestamp = Number(block.timestamp);
 

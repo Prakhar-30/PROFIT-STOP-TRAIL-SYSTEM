@@ -457,6 +457,7 @@ const PositionForm = ({ account, chainId, contracts, isDeployed, onContractsDepl
               pairAddress={pairInfo.address}
               sellToken={sellTokenInfo.symbol}
               buyToken={buyTokenInfo.symbol}
+              sellToken0={pairInfo.sellToken0}
             />
           )}
         </div>
