@@ -41,66 +41,80 @@ const PriceChart = ({ pairAddress, sellToken, buyToken, sellToken0 }) => {
       const token0Contract = await getERC20Contract(token0Address);
       const token1Contract = await getERC20Contract(token1Address);
 
-      const [decimals0, decimals1] = await Promise.all([
+      const [decimals0, decimals1, currentBlock] = await Promise.all([
         token0Contract.decimals(),
-        token1Contract.decimals()
+        token1Contract.decimals(),
+        provider.getBlockNumber()
       ]);
-
-      const currentBlock = await provider.getBlockNumber();
 
       // Time range configuration for Sepolia (12 second blocks)
       const timeRangeConfig = {
-        '15m': { blocks: 75, step: 2, dataPoints: 37, candleSize: 5 },
-        '30m': { blocks: 150, step: 2, dataPoints: 75, candleSize: 10 },
-        '1h': { blocks: 300, step: 3, dataPoints: 100, candleSize: 15 },
-        '6h': { blocks: 1800, step: 15, dataPoints: 120, candleSize: 20 },
+        '15m': { blocks: 75, step: 2, dataPoints: 37, candleSize: 5, batchSize: 10 },
+        '30m': { blocks: 150, step: 2, dataPoints: 75, candleSize: 10, batchSize: 15 },
+        '1h': { blocks: 300, step: 3, dataPoints: 100, candleSize: 15, batchSize: 20 },
+        '6h': { blocks: 1800, step: 15, dataPoints: 120, candleSize: 20, batchSize: 30 },
       };
 
       const config = timeRangeConfig[timeRange] || timeRangeConfig['1h'];
-      const { blocks: totalBlocks, step: blockStep, dataPoints, candleSize } = config;
+      const { blocks: totalBlocks, step: blockStep, dataPoints, candleSize, batchSize } = config;
+
+      // Calculate block numbers upfront
+      const blockNumbers = [];
+      for (let i = 0; i < dataPoints; i++) {
+        const blockNumber = currentBlock - (totalBlocks - (i * blockStep));
+        if (blockNumber > 0) blockNumbers.push(blockNumber);
+      }
 
       const priceData = [];
 
-      // Fetch historical data
-      for (let i = 0; i < dataPoints; i++) {
-        const blockNumber = currentBlock - (totalBlocks - (i * blockStep));
-        if (blockNumber < 0) break;
+      // Fetch data in batches using Promise.all for parallel requests
+      for (let i = 0; i < blockNumbers.length; i += batchSize) {
+        const batch = blockNumbers.slice(i, Math.min(i + batchSize, blockNumbers.length));
 
-        try {
-          const reserves = await pairContract.getReserves({ blockTag: blockNumber });
-          const reserve0 = parseFloat(ethers.formatUnits(reserves.reserve0, decimals0));
-          const reserve1 = parseFloat(ethers.formatUnits(reserves.reserve1, decimals1));
+        // Parallel fetch for this batch
+        const batchPromises = batch.map(async (blockNumber, index) => {
+          try {
+            const reserves = await pairContract.getReserves({ blockTag: blockNumber });
+            const reserve0 = parseFloat(ethers.formatUnits(reserves.reserve0, decimals0));
+            const reserve1 = parseFloat(ethers.formatUnits(reserves.reserve1, decimals1));
 
-          if (reserve0 > 0 && reserve1 > 0) {
-            // Calculate price based on which token is being sold
-            // If selling token0, price = reserve1/reserve0 (how much token1 per token0)
-            // If selling token1, price = reserve0/reserve1 (how much token0 per token1)
-            const price = sellToken0 ? (reserve1 / reserve0) : (reserve0 / reserve1);
-            const block = await provider.getBlock(blockNumber);
-            const timestamp = Number(block.timestamp);
+            if (reserve0 > 0 && reserve1 > 0) {
+              // Calculate price based on which token is being sold
+              const price = sellToken0 ? (reserve1 / reserve0) : (reserve0 / reserve1);
 
-            priceData.push({
-              time: timestamp,
-              price: price
-            });
+              // Estimate timestamp (12 second blocks on Sepolia)
+              const estimatedTimestamp = Math.floor(Date.now() / 1000) - ((currentBlock - blockNumber) * 12);
+
+              return {
+                time: estimatedTimestamp,
+                price: price,
+                blockNumber: blockNumber
+              };
+            }
+          } catch (err) {
+            console.log(`Skipping block ${blockNumber}:`, err.message);
           }
-        } catch (err) {
-          console.log(`Skipping block ${blockNumber}:`, err.message);
-        }
+          return null;
+        });
+
+        const batchResults = await Promise.all(batchPromises);
+
+        // Add valid results to priceData
+        batchResults.forEach(result => {
+          if (result) priceData.push(result);
+        });
 
         // Update progress
-        const progressPercent = Math.round(((i + 1) / dataPoints) * 100);
-        setProgress(progressPercent);
-
-        // Small delay to avoid rate limiting
-        if (i % 5 === 0 && i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
+        const progressPercent = Math.round(((i + batchSize) / blockNumbers.length) * 100);
+        setProgress(Math.min(progressPercent, 99));
       }
 
       if (priceData.length === 0) {
         throw new Error('No price data available. The pair might be too new.');
       }
+
+      // Sort by time (important since parallel fetching may return out of order)
+      priceData.sort((a, b) => a.time - b.time);
 
       // Convert to candlestick data
       const candlestickData = [];
