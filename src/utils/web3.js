@@ -22,11 +22,10 @@ export const getSigner = async () => {
 };
 
 // Get read-only provider for view calls (doesn't need signer)
+// Always use JsonRpcProvider for read-only operations to avoid wallet initialization delays
 export const getReadProvider = () => {
-  if (typeof window.ethereum !== 'undefined') {
-    return new ethers.BrowserProvider(window.ethereum);
-  }
-  // Fallback to public RPC for reading
+  // Use public Sepolia RPC for read-only contract calls
+  // This avoids any wallet connection requirements and is faster
   return new ethers.JsonRpcProvider('https://rpc.sepolia.org');
 };
 
