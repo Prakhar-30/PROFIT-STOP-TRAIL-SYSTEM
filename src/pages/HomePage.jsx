@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import '../styles/App.css';
 
-const HomePage = ({ account, connect, isConnecting, isDeployed, contracts }) => {
+const HomePage = ({ account, isDeployed, contracts }) => {
   const navigate = useNavigate();
 
   const handleGoToDashboard = () => {
@@ -46,9 +47,9 @@ const HomePage = ({ account, connect, isConnecting, isDeployed, contracts }) => 
         </div>
 
         {!account ? (
-          <button className="btn btn-primary btn-large" onClick={connect}>
-            Connect Wallet to Start
-          </button>
+          <div className="landing-actions">
+            <ConnectButton />
+          </div>
         ) : (
           <div className="landing-actions">
             <button className="btn btn-success btn-large" onClick={handleGoToDashboard}>

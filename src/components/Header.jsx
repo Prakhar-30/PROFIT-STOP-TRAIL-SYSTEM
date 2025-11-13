@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import '../styles/Header.css';
 
-const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, contracts }) => {
+const Header = ({ account, chainId, contracts }) => {
   const navigate = useNavigate();
 
   const getNetworkName = (chainId) => {
@@ -39,12 +40,6 @@ const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, c
                 </button>
               </nav>
             )}
-            {account && chainId && (
-              <div className="network-badge">
-                <span className="network-dot"></span>
-                {getNetworkName(chainId)}
-              </div>
-            )}
 
             {contracts.callback && (
               <div className="contract-status">
@@ -53,20 +48,7 @@ const Header = ({ account, formattedAccount, onConnect, isConnecting, chainId, c
               </div>
             )}
 
-            {account ? (
-              <div className="wallet-badge">
-                <span className="wallet-icon">🔐</span>
-                {formattedAccount}
-              </div>
-            ) : (
-              <button
-                className="btn btn-primary"
-                onClick={onConnect}
-                disabled={isConnecting}
-              >
-                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-              </button>
-            )}
+            <ConnectButton />
           </div>
         </div>
       </div>

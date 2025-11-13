@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useWeb3 } from './hooks/useWeb3';
+import { useAccount, useChainId } from 'wagmi';
 import { useContracts } from './hooks/useContracts';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
@@ -10,7 +10,8 @@ import './styles/index.css';
 import './styles/App.css';
 
 function App() {
-  const { account, chainId, isConnecting, connect, formattedAccount } = useWeb3();
+  const { address: account } = useAccount();
+  const chainId = useChainId();
   const { contracts, isDeployed, saveContracts } = useContracts(account);
 
   const handleContractsDeployed = (callbackAddress, reactiveAddress) => {
@@ -22,9 +23,6 @@ function App() {
       <div className="app">
         <Header
           account={account}
-          formattedAccount={formattedAccount}
-          onConnect={connect}
-          isConnecting={isConnecting}
           chainId={chainId}
           contracts={contracts}
         />
@@ -36,8 +34,6 @@ function App() {
               element={
                 <HomePage
                   account={account}
-                  connect={connect}
-                  isConnecting={isConnecting}
                   isDeployed={isDeployed}
                   contracts={contracts}
                 />
