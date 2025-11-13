@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useWeb3 } from '../context/Web3Context';
 import '../styles/App.css';
 
 const HomePage = ({ account, isDeployed, contracts }) => {
   const navigate = useNavigate();
+  const { connect } = useWeb3();
 
   const handleGoToDashboard = () => {
     navigate('/dashboard');
@@ -48,7 +49,9 @@ const HomePage = ({ account, isDeployed, contracts }) => {
 
         {!account ? (
           <div className="landing-actions">
-            <ConnectButton />
+            <button className="btn btn-primary btn-large" onClick={connect}>
+              Connect Wallet
+            </button>
           </div>
         ) : (
           <div className="landing-actions">

@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useWeb3 } from '../context/Web3Context';
+import { formatAddress } from '../utils/web3';
 import '../styles/Header.css';
 
 const Header = ({ account, chainId, contracts }) => {
   const navigate = useNavigate();
+  const { connect, disconnect } = useWeb3();
 
   const getNetworkName = (chainId) => {
     switch (chainId) {
@@ -48,7 +50,20 @@ const Header = ({ account, chainId, contracts }) => {
               </div>
             )}
 
-            <ConnectButton />
+            {account ? (
+              <div className="wallet-info">
+                {chainId && (
+                  <span className="network-badge">{getNetworkName(chainId)}</span>
+                )}
+                <button className="wallet-button connected" onClick={disconnect}>
+                  {formatAddress(account)}
+                </button>
+              </div>
+            ) : (
+              <button className="wallet-button" onClick={connect}>
+                Connect Wallet
+              </button>
+            )}
           </div>
         </div>
       </div>

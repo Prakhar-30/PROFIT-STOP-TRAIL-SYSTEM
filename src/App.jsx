@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAccount, useChainId } from 'wagmi';
+import { useWeb3 } from './context/Web3Context';
 import { useContracts } from './hooks/useContracts';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
@@ -10,8 +10,7 @@ import './styles/index.css';
 import './styles/App.css';
 
 function App() {
-  const { address: account } = useAccount();
-  const chainId = useChainId();
+  const { account, chainId } = useWeb3();
   const { contracts, isDeployed, saveContracts } = useContracts(account);
 
   const handleContractsDeployed = (callbackAddress, reactiveAddress) => {
