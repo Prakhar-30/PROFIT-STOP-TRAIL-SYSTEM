@@ -6,8 +6,8 @@ import { ERC20_ABI, UNISWAP_PAIR_ABI, UNISWAP_FACTORY_ABI, UNISWAP_FACTORY_ADDRE
 import { CALLBACK_BYTECODE, REACTIVE_BYTECODE } from '../contracts/bytecode';
 import { UNISWAP_V2_ROUTER, CALLBACK_SENDER, CALLBACK_DEPLOY_VALUE, REACTIVE_DEPLOY_VALUE } from '../config/networks';
 
-// Export getProvider for use in components
-export { getProvider };
+// Export providers for use in components
+export { getProvider, getReadProvider };
 
 export const deployCallbackContract = async (ownerAddress) => {
   const signer = await getSigner();
