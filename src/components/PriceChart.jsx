@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import { createChart } from 'lightweight-charts';
-import { getPairContract, getERC20Contract, getProvider } from '../utils/contracts';
+import { getPairContractRead, getERC20ContractRead, getReadProvider } from '../utils/contracts';
 import '../styles/PriceChart.css';
 
 const PriceChart = ({ pairAddress, sellToken, buyToken, sellToken0 }) => {
@@ -31,15 +31,15 @@ const PriceChart = ({ pairAddress, sellToken, buyToken, sellToken0 }) => {
       setError('');
       setProgress(0);
 
-      const provider = getProvider();
-      const pairContract = await getPairContract(pairAddress);
+      const provider = getReadProvider();
+      const pairContract = getPairContractRead(pairAddress);
 
       // Get token addresses
       const token0Address = await pairContract.token0();
       const token1Address = await pairContract.token1();
 
-      const token0Contract = await getERC20Contract(token0Address);
-      const token1Contract = await getERC20Contract(token1Address);
+      const token0Contract = getERC20ContractRead(token0Address);
+      const token1Contract = getERC20ContractRead(token1Address);
 
       const [decimals0, decimals1, currentBlock] = await Promise.all([
         token0Contract.decimals(),

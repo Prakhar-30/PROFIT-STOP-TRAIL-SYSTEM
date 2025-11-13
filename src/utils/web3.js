@@ -1,16 +1,33 @@
 import { ethers } from 'ethers';
 import { NETWORKS } from '../config/networks';
 
+// Get provider from wagmi config or fallback to window.ethereum
 export const getProvider = () => {
   if (typeof window.ethereum !== 'undefined') {
     return new ethers.BrowserProvider(window.ethereum);
   }
-  throw new Error('No Web3 Provider detected');
+  throw new Error('No Web3 Provider detected. Please connect your wallet.');
 };
 
+// Get signer with better error handling
 export const getSigner = async () => {
-  const provider = getProvider();
-  return await provider.getSigner();
+  try {
+    const provider = getProvider();
+    const signer = await provider.getSigner();
+    return signer;
+  } catch (error) {
+    console.error('Error getting signer:', error);
+    throw new Error('Failed to get wallet signer. Please make sure your wallet is connected.');
+  }
+};
+
+// Get read-only provider for view calls (doesn't need signer)
+export const getReadProvider = () => {
+  if (typeof window.ethereum !== 'undefined') {
+    return new ethers.BrowserProvider(window.ethereum);
+  }
+  // Fallback to public RPC for reading
+  return new ethers.JsonRpcProvider('https://rpc.sepolia.org');
 };
 
 export const connectWallet = async () => {
